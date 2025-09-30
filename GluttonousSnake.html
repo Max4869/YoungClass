@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>🐍 贪吃蛇小游戏</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Microsoft YaHei", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 10px;
+        overflow-x: hidden;
+      }
+      .game-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 15px;
+        font-size: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .info-panel {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 15px;
+        gap: 10px;
+      }
+      .info-card {
+        flex: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+      .info-card label {
+        font-size: 12px;
+        opacity: 0.9;
+        display: block;
+      }
+      .info-card span {
+        font-size: 24px;
+        font-weight: bold;
+        display: block;
+        margin-top: 2px;
+      }
+      #canvasWrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 15px;
+      }
+      canvas {
+        background: #2a2a3e;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+      .mobile-controls {
+        display: none;
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 15px auto;
+      }
+      .joystick-base {
+        width: 150px;
+        height: 150px;
+        background: rgba(102, 126, 234, 0.1);
+        border: 3px solid rgba(102, 126, 234, 0.3);
+        border-radius: 50%;
+        position: relative;
+      }
+      .joystick-stick {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        transition: all 0.1s ease;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 15px 0;
+      }
+      button {
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      button:active {
+        transform: scale(0.95);
+      }
+      #startBtn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      #pauseBtn {
+        background: #f59e0b;
+        color: white;
+      }
+      #resetBtn {
+        background: #ef4444;
+        color: white;
+      }
+      .settings-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 12px;
+        margin: 10px 0;
+      }
+      .settings-section h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        color: #667eea;
+      }
+      .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 0;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .setting-row label {
+        font-size: 13px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      select,
+      input[type="color"] {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.3s;
+      }
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      input[type="color"] {
+        width: 50px;
+        height: 35px;
+        padding: 2px;
+      }
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+      .leaderboard {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 15px;
+      }
+      .leaderboard h3 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        color: #667eea;
+      }
+      .leaderboard ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 10px;
+      }
+      .leaderboard li {
+        background: white;
+        padding: 8px 12px;
+        margin: 5px 0;
+        border-radius: 8px;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+      }
+      #clearRank {
+        background: #6b7280;
+        color: white;
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+      .instructions {
+        font-size: 12px;
+        color: #666;
+        margin-top: 10px;
+      }
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 24px;
+        }
+        .mobile-controls {
+          display: block;
+        }
+        .instructions {
+          display: none;
+        }
+        .setting-row {
+          font-size: 12px;
+        }
+        button {
+          font-size: 13px;
+          padding: 8px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>🐍 贪吃蛇小游戏</h1>
+
+      <div class="info-panel">
+        <div class="info-card">
+          <label>分数</label>
+          <span id="score">0</span>
+        </div>
+        <div class="info-card">
+          <label>最高分</label>
+          <span id="highscore">0</span>
+        </div>
+      </div>
+
+      <div id="canvasWrapper">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+      </div>
+
+      <!-- 手机端虚拟摇杆 -->
+      <div class="mobile-controls">
+        <div class="joystick-base">
+          <div class="joystick-stick" id="joystick"></div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="controls">
+        <button id="startBtn">开始游戏</button>
+        <button id="pauseBtn">暂停</button>
+        <button id="resetBtn">重新开始</button>
+      </div>
+
+      <!-- 游戏设置 -->
+      <div class="settings-section">
+        <h3>⚙️ 游戏设置</h3>
+        <div class="setting-row">
+          <label
+            >难度：
+            <select id="difficulty">
+              <option value="200">简单</option>
+              <option value="150" selected>中等</option>
+              <option value="100">困难</option>
+              <option value="70">地狱</option>
+            </select>
+          </label>
+          <label
+            >模式：
+            <select id="mode">
+              <option value="classic">经典</option>
+              <option value="noborder">无边界</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- 个性化设置 -->
+      <div class="settings-section">
+        <h3>🎨 个性化</h3>
+        <div class="setting-row">
+          <label
+            >背景：
+            <select id="theme">
+              <option value="dark">深色</option>
+              <option value="gradient" selected>渐变</option>
+              <option value="grass">草地</option>
+              <option value="pixel">像素</option>
+            </select>
+          </label>
+          <label
+            >蛇颜色：
+            <input type="color" id="snakeColor" value="#4caf50" />
+          </label>
+        </div>
+        <div class="setting-row">
+          <label
+            >食物：
+            <select id="foodStyle">
+              <option value="random">🎲 随机</option>
+              <option value="square">🟥 方块</option>
+              <option value="apple">🍎 苹果</option>
+              <option value="cherry">🍒 樱桃</option>
+              <option value="cookie">🍪 饼干</option>
+            </select>
+          </label>
+          <label> <input type="checkbox" id="sfxToggle" checked /> 音效 </label>
+        </div>
+      </div>
+
+      <!-- 排行榜 -->
+      <div class="leaderboard">
+        <h3>🏆 排行榜</h3>
+        <ul id="rankList"></ul>
+        <button id="clearRank">清除记录</button>
+      </div>
+
+      <div class="instructions">使用键盘 <b>↑ ↓ ← →</b> 控制蛇的方向</div>
+    </div>
+
+    <script>
+      // 画布 & 变量
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const box = 20;
+      const gridSize = 20;
+      let snake, food, direction, score;
+      let game,
+        speed = 150,
+        mode = "classic";
+      let highscore = localStorage.getItem("snakeHighScore") || 0;
+      let isPaused = false;
+      let pendingDirection = null;
+      document.getElementById("highscore").textContent = highscore;
+
+      // 音效
+      const eatSound = new Audio(
+        "https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3"
+      );
+      const dieSound = new Audio(
+        "https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"
+      );
+      eatSound.volume = 0.3;
+      dieSound.volume = 0.3;
+
+      // 随机获取食物样式
+      function getRandomFoodStyle() {
+        const styles = ["square", "apple", "cherry", "cookie"];
+        return styles[Math.floor(Math.random() * styles.length)];
+      }
+
+      // 初始化游戏
+      function initGame() {
+        snake = [{ x: 9 * box, y: 10 * box }];
+        direction = null;
+        pendingDirection = null;
+        score = 0;
+        isPaused = false;
+        food = spawnFood();
+        clearInterval(game);
+        game = setInterval(drawGame, speed);
+        document.getElementById("score").textContent = score;
+      }
+
+      // 生成食物
+      function spawnFood() {
+        const userChoice = document.getElementById("foodStyle").value;
+        let foodStyle;
+
+        if (userChoice === "random") {
+          foodStyle = getRandomFoodStyle();
+        } else {
+          foodStyle = userChoice;
+        }
+
+        return {
+          x: Math.floor(Math.random() * gridSize) * box,
+          y: Math.floor(Math.random() * gridSize) * box,
+          style: foodStyle,
+        };
+      }
+
+      // 绘制游戏
+      function drawGame() {
+        if (isPaused) return;
+
+        if (pendingDirection) {
+          direction = pendingDirection;
+          pendingDirection = null;
+        }
+
+        drawBackground();
+        const snakeColor = document.getElementById("snakeColor").value;
+
+        // 画蛇
+        for (let i = 0; i < snake.length; i++) {
+          ctx.fillStyle = snakeColor;
+          ctx.shadowColor = "rgba(0,0,0,0.3)";
+          ctx.shadowBlur = 5;
+          ctx.fillRect(snake[i].x, snake[i].y, box, box);
+
+          if (i === 0) {
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.fillRect(snake[i].x + 3, snake[i].y + 3, box - 6, box - 6);
+          }
+
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+          ctx.shadowBlur = 0;
+        }
+
+        // 画食物
+        drawFood(food.x, food.y, food.style);
+
+        if (!direction) return;
+
+        let snakeX = snake[0].x;
+        let snakeY = snake[0].y;
+
+        if (direction === "LEFT") snakeX -= box;
+        if (direction === "UP") snakeY -= box;
+        if (direction === "RIGHT") snakeX += box;
+        if (direction === "DOWN") snakeY += box;
+
+        // 无边界模式
+        if (mode === "noborder") {
+          if (snakeX < 0) snakeX = canvas.width - box;
+          if (snakeY < 0) snakeY = canvas.height - box;
+          if (snakeX >= canvas.width) snakeX = 0;
+          if (snakeY >= canvas.height) snakeY = 0;
+        }
+
+        // 吃食物
+        if (snakeX === food.x && snakeY === food.y) {
+          if (document.getElementById("sfxToggle").checked) eatSound.play();
+          score++;
+          food = spawnFood();
+        } else {
+          snake.pop();
+        }
+
+        let newHead = { x: snakeX, y: snakeY };
+
+        // 撞墙
+        if (mode !== "noborder") {
+          if (
+            snakeX < 0 ||
+            snakeY < 0 ||
+            snakeX >= canvas.width ||
+            snakeY >= canvas.height
+          ) {
+            return gameOver();
+          }
+        }
+
+        // 撞自己
+        if (collision(newHead, snake)) {
+          return gameOver();
+        }
+
+        snake.unshift(newHead);
+        document.getElementById("score").textContent = score;
+      }
+
+      // 背景
+      function drawBackground() {
+        const theme = document.getElementById("theme").value;
+
+        if (theme === "dark") {
+          ctx.fillStyle = "#2a2a3e";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (theme === "gradient") {
+          let g = ctx.createLinearGradient(0, 0, 400, 400);
+          g.addColorStop(0, "#667eea");
+          g.addColorStop(1, "#764ba2");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (theme === "grass") {
+          ctx.fillStyle = "#4ade80";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (theme === "pixel") {
+          ctx.fillStyle = "#1f2937";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#374151";
+          for (let x = 0; x < canvas.width; x += box) {
+            for (let y = 0; y < canvas.height; y += box) {
+              if ((x / box + y / box) % 2 === 0) {
+                ctx.fillRect(x, y, box, box);
+              }
+            }
+          }
+        }
+      }
+
+      // 食物样式
+      function drawFood(x, y, style) {
+        if (style === "square") {
+          ctx.fillStyle = "#ef4444";
+          ctx.shadowColor = "#ef4444";
+          ctx.shadowBlur = 8;
+          ctx.fillRect(x + 2, y + 2, box - 4, box - 4);
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.font = "20px Arial";
+          const emoji =
+            style === "apple" ? "🍎" : style === "cherry" ? "🍒" : "🍪";
+          ctx.fillText(emoji, x + 2, y + 18);
+        }
+      }
+
+      // 碰撞检测
+      function collision(head, array) {
+        for (let i = 0; i < array.length; i++) {
+          if (head.x === array[i].x && head.y === array[i].y) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // 游戏结束
+      function gameOver() {
+        clearInterval(game);
+        if (document.getElementById("sfxToggle").checked) dieSound.play();
+
+        setTimeout(() => {
+          alert("游戏结束！得分：" + score);
+          if (score > highscore) {
+            localStorage.setItem("snakeHighScore", score);
+            highscore = score;
+          }
+          saveRank(score);
+          document.getElementById("highscore").textContent = highscore;
+        }, 100);
+      }
+
+      // 排行榜
+      function saveRank(score) {
+        if (score === 0) return;
+        let ranks = JSON.parse(localStorage.getItem("snakeRank") || "[]");
+        let name = prompt("请输入昵称：", "玩家") || "匿名";
+        ranks.push({ name, score, date: new Date().toLocaleDateString() });
+        ranks.sort((a, b) => b.score - a.score);
+        ranks = ranks.slice(0, 5);
+        localStorage.setItem("snakeRank", JSON.stringify(ranks));
+        renderRank();
+      }
+
+      function renderRank() {
+        let ranks = JSON.parse(localStorage.getItem("snakeRank") || "[]");
+        const html = ranks.length
+          ? ranks
+              .map(
+                (r, i) =>
+                  `<li><span>${i + 1}. ${r.name}</span><span>${
+                    r.score
+                  }分</span></li>`
+              )
+              .join("")
+          : "<li>暂无记录</li>";
+        document.getElementById("rankList").innerHTML = html;
+      }
+      renderRank();
+
+      // 控件事件
+      document.getElementById("startBtn").onclick = initGame;
+      document.getElementById("pauseBtn").onclick = () => {
+        isPaused = !isPaused;
+        document.getElementById("pauseBtn").textContent = isPaused
+          ? "继续"
+          : "暂停";
+      };
+      document.getElementById("resetBtn").onclick = initGame;
+      document.getElementById("difficulty").onchange = function () {
+        speed = parseInt(this.value);
+        if (game) {
+          clearInterval(game);
+          game = setInterval(drawGame, speed);
+        }
+      };
+      document.getElementById("mode").onchange = function () {
+        mode = this.value;
+      };
+      document.getElementById("clearRank").onclick = function () {
+        if (confirm("确定要清除所有记录吗？")) {
+          localStorage.removeItem("snakeRank");
+          renderRank();
+        }
+      };
+
+      // 键盘控制
+      let lastDirection = null;
+      document.addEventListener("keydown", (e) => {
+        const key = e.key;
+        if (!["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(key))
+          return;
+
+        e.preventDefault();
+
+        const currentDir = direction || lastDirection;
+
+        if (key === "ArrowLeft" && currentDir !== "RIGHT") {
+          pendingDirection = "LEFT";
+          lastDirection = "LEFT";
+        } else if (key === "ArrowUp" && currentDir !== "DOWN") {
+          pendingDirection = "UP";
+          lastDirection = "UP";
+        } else if (key === "ArrowRight" && currentDir !== "LEFT") {
+          pendingDirection = "RIGHT";
+          lastDirection = "RIGHT";
+        } else if (key === "ArrowDown" && currentDir !== "UP") {
+          pendingDirection = "DOWN";
+          lastDirection = "DOWN";
+        }
+      });
+
+      // 手机端触摸控制
+      let touchStartX = 0;
+      let touchStartY = 0;
+      const minSwipeDistance = 30;
+
+      canvas.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          touchStartX = touch.clientX;
+          touchStartY = touch.clientY;
+        },
+        { passive: false }
+      );
+
+      canvas.addEventListener(
+        "touchmove",
+        (e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          const touchEndX = touch.clientX;
+          const touchEndY = touch.clientY;
+
+          const deltaX = touchEndX - touchStartX;
+          const deltaY = touchEndY - touchStartY;
+
+          if (
+            Math.abs(deltaX) > minSwipeDistance ||
+            Math.abs(deltaY) > minSwipeDistance
+          ) {
+            const currentDir = direction || lastDirection;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              if (deltaX > 0 && currentDir !== "LEFT") {
+                pendingDirection = "RIGHT";
+                lastDirection = "RIGHT";
+              } else if (deltaX < 0 && currentDir !== "RIGHT") {
+                pendingDirection = "LEFT";
+                lastDirection = "LEFT";
+              }
+            } else {
+              if (deltaY > 0 && currentDir !== "UP") {
+                pendingDirection = "DOWN";
+                lastDirection = "DOWN";
+              } else if (deltaY < 0 && currentDir !== "DOWN") {
+                pendingDirection = "UP";
+                lastDirection = "UP";
+              }
+            }
+
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+          }
+        },
+        { passive: false }
+      );
+
+      // 虚拟摇杆
+      const joystick = document.getElementById("joystick");
+      const joystickBase = joystick.parentElement;
+      let joystickActive = false;
+
+      joystickBase.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          joystickActive = true;
+        },
+        { passive: false }
+      );
+
+      joystickBase.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!joystickActive) return;
+          e.preventDefault();
+
+          const touch = e.touches[0];
+          const rect = joystickBase.getBoundingClientRect();
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+
+          let deltaX = touch.clientX - rect.left - centerX;
+          let deltaY = touch.clientY - rect.top - centerY;
+
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const maxDistance = 45;
+
+          if (distance > maxDistance) {
+            deltaX = (deltaX / distance) * maxDistance;
+            deltaY = (deltaY / distance) * maxDistance;
+          }
+
+          joystick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+
+          const currentDir = direction || lastDirection;
+          const threshold = 15;
+
+          if (
+            Math.abs(deltaX) > Math.abs(deltaY) &&
+            Math.abs(deltaX) > threshold
+          ) {
+            if (deltaX > 0 && currentDir !== "LEFT") {
+              pendingDirection = "RIGHT";
+              lastDirection = "RIGHT";
+            } else if (deltaX < 0 && currentDir !== "RIGHT") {
+              pendingDirection = "LEFT";
+              lastDirection = "LEFT";
+            }
+          } else if (Math.abs(deltaY) > threshold) {
+            if (deltaY > 0 && currentDir !== "UP") {
+              pendingDirection = "DOWN";
+              lastDirection = "DOWN";
+            } else if (deltaY < 0 && currentDir !== "DOWN") {
+              pendingDirection = "UP";
+              lastDirection = "UP";
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      joystickBase.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          joystickActive = false;
+          joystick.style.transform = "translate(-50%, -50%)";
+        },
+        { passive: false }
+      );
+    </script>
+  </body>
+</html>
